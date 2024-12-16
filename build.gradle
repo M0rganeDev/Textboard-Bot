@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+}
+
+group = 'xyz.someboringnerd'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    implementation.extendsFrom(library)
+    shadow.extendsFrom(library)
+}
+
+dependencies {
+    library 'org.java-websocket:Java-WebSocket:1.5.3'
+    library 'ch.qos.logback:logback-core:1.5.6'
+    library 'org.slf4j:slf4j-api:2.0.16'
+    library 'ch.qos.logback:logback-classic:1.5.6'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    library 'org.projectlombok:lombok:1.18.34'
+}
+
+shadowJar {
+    configurations = [ project.configurations.shadow ]
+}
+
+jar {
+    dependsOn shadowJar
+    manifest {
+        attributes(
+                'Main-Class': 'dev.morgane.textbot.Main'
+        )
+    }
+}
