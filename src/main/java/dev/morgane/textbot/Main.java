@@ -1,17 +1,18 @@
 package dev.morgane.textbot;
 
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import java.net.URI;
+import lombok.Getter;
 
 public class Main {
+	@Getter
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
-
+	
+	@Getter
     public static boolean IS_LOGGED = false;
+
+	private static Worker client = null;
 
     private static void print_usage()
     {
@@ -24,6 +25,29 @@ public class Main {
         logger.info(" ");
     }
 
+	public static String msToHumanTime(long duration)
+	{
+		long ms, seconds, minutes, hours;
+		String _final = "";
+		ms = duration % 1000;
+		duration /= 1000;
+		seconds = duration % 60;
+		duration /= 60;
+		minutes = duration % 60;
+		duration /= 60;
+		hours = duration % 24;
+
+		if (hours != 0)
+			_final += hours + "H:";
+		if (minutes != 0)
+			_final += minutes + "M:";
+		if (seconds != 0)
+			_final += seconds + "s:";
+		if (ms != 0)
+			_final += ms + "ms";
+		return (_final);
+	} 
+
     public static void main(String[] args)
     {
         if ((System.getenv("textboard_token") == null && args.length <= 1) || args.length <= 2)
@@ -31,50 +55,13 @@ public class Main {
             print_usage();
             return;
         }
-
         try
         {
-            String serverUrl = "wss://aywenito.textboard.fr:25555/ws";
-            WebSocketClient client = new WebSocketClient(new URI(serverUrl)) {
-
-                @Override
-                public void onOpen(ServerHandshake handshake) {
-                    System.out.println("Connected to server");
-                    BotCommands.connect(this, System.getenv("textboard_token") == null ? args[3] : System.getenv("textboard_token"));
-                }
-
-                @Override
-                public void onMessage(String message) {
-                    System.out.println("Received: " + message);
-                    if (message.contains("CONNECTED"))
-                    {
-                        IS_LOGGED = true;
-                        long now = System.currentTimeMillis();
-                        BotCommands.send_file(this, Integer.parseInt(args[1]), Integer.parseInt(args[2]), args[0]);
-                        this.close();
-                        long now2 = System.currentTimeMillis();
-                        logger.info("\nPrinted {} in {} seconds !", args[0], (now2 - now) / 1000);
-                        System.exit(0);
-                    }
-                }
-
-                @Override
-                public void onClose(int code, String reason, boolean remote) {
-                    System.out.println("Connection closed: " + reason);
-                    IS_LOGGED = false;
-                }
-
-                @Override
-                public void onError(Exception ex) {
-                    ex.printStackTrace();
-                }
-            };
-            SSLContext sslContext = SSLContext.getDefault();
-            client.setSocket(sslContext.getSocketFactory().createSocket());
-            client.setConnectionLostTimeout(0);
-            client.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0");
+			client = new Worker(System.getenv("textboard_token") == null ? args[3] : System.getenv("textboard_token"), "wss://aywenito.textboard.fr:25555/ws", () -> {
+				BotCommands.send_file(client, Integer.parseInt(args[1]), Integer.parseInt(args[2]), args[0]);
+				client.close(0);
+			});
             client.connect();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
