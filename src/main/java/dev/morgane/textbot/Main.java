@@ -58,6 +58,11 @@ public class Main {
 	@SneakyThrows
     public static void main(String[] args)
     {
+		if(args.length <= 2)
+		{
+			print_usage();
+			return;
+		}
         try
         {
 			AtomicInteger i = new AtomicInteger(0);
