@@ -8,9 +8,18 @@ Its goal is to be able to print ascii art at blazing speeds.
 
 Compile the code yourself using Java 17 (or later), or download it through release
 
-then, in a terminal, type `java -jar path/to/textboard-bot.jar [path/to/ascii.txt], [X origin point] [Y origin point] [your token]`
+Put as many refresh_tokens you need (up to 10 per ip) in a file named `tokens.txt` (case sensitive !) in the same directory as the jar file as such :
 
-for exemple : `java -jar textboard-bot.jar text.txt 0 0 token`
+```
+token1
+token2
+etc...
+tokenN
+```
+
+then, in a terminal, type `java -jar textboard-bot.jar [path/to/ascii.txt], [X origin point] [Y origin point]`
+
+for exemple : `java -jar textboard-bot.jar text.txt 0 0`
 
 # Obtain your token
 

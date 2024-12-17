@@ -23,7 +23,7 @@ public class BotCommands {
         auth += "Authorization:" + token + "\n";
         auth += "accept-version:1.2,1.1,1.0\n";
         auth += "heart-beat:10000,10000\n\n\0";
-        Main.getLogger().info("raw message : \n" + auth.replace(token, "[REDACTED]"));
+//        Main.getLogger().info("raw message : \n" + auth.replace(token, "[REDACTED]"));
         client.send(auth);
     }
 
@@ -64,15 +64,18 @@ public class BotCommands {
 		send_str(client, x.get(), y.get(), msg);
 	}
 
+	public static AtomicInteger lines = new AtomicInteger(0);
+
     @SneakyThrows
-    public static void send_file(Worker client, int x, int y, String file_path)
+    public static void send_file(Worker client, int x, int y, String file_path, int offset)
     {
         BufferedReader reader;
 		java.util.List<String> strs = new ArrayList<>();
 		AtomicInteger x_a = new AtomicInteger(x);
 		AtomicInteger index = new AtomicInteger(0);
 		AtomicInteger y_a = new AtomicInteger(y);
-
+		
+		index.getAndAdd(offset);
         try {
             reader = new BufferedReader(new FileReader(file_path));
             String line = reader.readLine();
@@ -85,22 +88,28 @@ public class BotCommands {
         } catch (IOException e) {
             e.printStackTrace();
         }
-		strs.forEach(str -> {
+		y += offset;
+		Main.getLogger().info("worker with id {} started their tasks", client.getId());
+		while (index.get() < strs.size()) 
+		{
 			long start = System.currentTimeMillis();
-	        send_str(client, x_a, y_a, str);
+			send_str(client, x, y, strs.get(index.get()));	
 			long finish = System.currentTimeMillis();
-			Main.getLogger().info("printed line {}/{} ({} %) in {} ({} lines left, should be done in {})", 
-					index.get(), 
-					strs.size(), 
-					((float)index.get() / (float)strs.size()) * 100, 
-					Main.msToHumanTime((finish - start)), 
-					strs.size() - index.get(), 
-					Main.msToHumanTime((finish - start) * (strs.size() - index.get())));
-			try {
-            	Thread.sleep(25);
-			} catch (Exception ignored) {}
-        	y_a.getAndIncrement();
-			index.getAndIncrement();
-		});
+			index.addAndGet(Worker.getSize());
+			y += Worker.getSize();
+			if (lines.getAndIncrement() == (Worker.getSize() - 1))
+			{
+				Main.getLogger().info("Printed {}/{} lines ({}%) in {} with {} workers. ETA : {}", 
+					index.get() - Worker.getSize() + 1,
+					strs.size(),
+					((float)index.get()) / ((float)strs.size()) * 100,
+					Main.msToHumanTime((finish - start)),
+					Worker.getSize(),
+					Main.msToHumanTime(((finish - start) * (strs.size() - index.get() - Worker.getSize() + 1)) / Worker.getSize())
+				);
+				lines.set(0);
+			}
+		}
+		Main.getLogger().info("worker with id {} finished their tasks", client.getId());
     }
 }

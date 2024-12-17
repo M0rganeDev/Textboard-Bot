@@ -1,9 +1,16 @@
 package dev.morgane.textbot;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
+import lombok.SneakyThrows;
 
 public class Main {
 	@Getter
@@ -48,22 +55,53 @@ public class Main {
 		return (_final);
 	} 
 
+	@SneakyThrows
     public static void main(String[] args)
     {
-        if ((System.getenv("textboard_token") == null && args.length <= 1) || args.length <= 2)
-        {
-            print_usage();
-            return;
-        }
         try
         {
-			client = new Worker(System.getenv("textboard_token") == null ? args[3] : System.getenv("textboard_token"), "wss://aywenito.textboard.fr:25555/ws", () -> {
-				BotCommands.send_file(client, Integer.parseInt(args[1]), Integer.parseInt(args[2]), args[0]);
-				client.close(0);
+			AtomicInteger i = new AtomicInteger(0);
+			getTokens().forEach(token -> {
+				new Thread(() -> {
+					try {
+					client = new Worker(token, "wss://aywenito.textboard.fr:25555/ws", () -> {
+						BotCommands.send_file(client, Integer.parseInt(args[1]), Integer.parseInt(args[2]), args[0], i.getAndIncrement());
+						client.close();
+					});
+					client.connect();
+					} catch (Exception e) {
+						// TODO: handle exception
+					}
+				}).start();
+				try {
+					Thread.sleep(1000);
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
 			});
-            client.connect();
         } catch (Exception e) {
             e.printStackTrace();
         }
+		IS_LOGGED = true;
     }
+
+	private static List<String> getTokens()
+	{
+		List<String> tokens = new ArrayList<>();
+		BufferedReader reader;
+
+		try {
+			reader = new BufferedReader(new FileReader("tokens.txt"));
+            String line = reader.readLine();
+
+            while (line != null) {
+				tokens.add(line);
+                line = reader.readLine();
+            }
+            reader.close();
+		} catch (Exception e) {
+		}
+
+		return (tokens);
+	}
 }

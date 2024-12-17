@@ -23,12 +23,20 @@ public class Worker extends WebSocketClient
 
 	private final ITask task;
 
+	@Getter
+	private int id;
+	
+	@Getter
+	private static int size = 0;
+
 	public Worker(String token, String url, ITask task) throws URISyntaxException
 	{
 		super(new URI(url));
 		this.token = token;
 		this.task = task;
 		Main.getLogger().info("Trying to create websocket client");
+		id = size;
+		++size;
 		try {
 	        SSLContext sslContext = SSLContext.getDefault();
 			setSocket(sslContext.getSocketFactory().createSocket());
@@ -54,12 +62,12 @@ public class Worker extends WebSocketClient
 	@Override
 	public void onMessage(String message)
 	{
-		Main.getLogger().info("message from server : {}", message);
+		//Main.getLogger().info("message from server : {}", message);
 		if (message.contains("CONNECTED"))
 		{
 			is_logged = true;
 			long start = System.currentTimeMillis();
-			Main.getLogger().info("Starting running task");
+			Main.getLogger().info("[{}] Worker is waiting for all other workers to be ready", id);
 			task.task();
 			long finish = System.currentTimeMillis();
 			Main.getLogger().info("Finished given task in {}", Main.msToHumanTime((finish - start)));
@@ -69,7 +77,7 @@ public class Worker extends WebSocketClient
 	@Override
 	public void onClose(int code, String reason, boolean remote)
 	{
-		Main.getLogger().info("Connexion to server was closed {}[{}] : {}", remote ? "by the remote server " : "", code, reason);
+		Main.getLogger().info("[{}] Connexion to server was closed {}[{}] : {}", id, remote ? "by the remote server " : "", code, reason);
 		is_logged = false;
 	}
 
