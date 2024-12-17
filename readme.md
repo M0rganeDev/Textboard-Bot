@@ -29,6 +29,10 @@ Sur textboard.fr, une fois connecté, allez dans les outils de dev (f12 sur fire
 
 Dans l'onglet "stockage", choisissez "cookies", et copiez le contenu de "refresh_token" (voir screenshot)
 
+note : 
+
+## VOUS AVEZ BESOIN DE DEUX COMPTES SI VOUS VOULEZ VOIR LE BOT TRAVAILLER EN TEMPS REEL !!!!!!!!
+
 ![Storage -> cookies](https://i.ibb.co/sPBxsHr/image.png "Exemple of cookie")
 
 # Textboard bot (en)
