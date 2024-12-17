@@ -45,11 +45,6 @@ public class Worker extends WebSocketClient
 		}
 		setConnectionLostTimeout(0);
 		addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0");
-		try {
-			Thread.sleep(250);
-		} catch (Exception e) {
-			Main.getLogger().info(e.getMessage());
-		}
 	}
 
 	@Override

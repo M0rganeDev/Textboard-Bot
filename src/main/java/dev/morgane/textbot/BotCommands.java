@@ -45,7 +45,8 @@ public class BotCommands {
         msg += "content-length:" + length + "\n\n";
         msg += payload + "\0";
 //        Main.getLogger().info("PIXEL CHANGE \n---------------------\n" + msg + "\n---------------------");
-        client.send(msg);
+        if (client.get_is_logged() && client.isOpen() && !client.isClosed() && !client.isClosing())
+			client.send(msg);
     }
 
     @SneakyThrows
@@ -53,8 +54,11 @@ public class BotCommands {
     {
         for (char c : msg.toCharArray())
 		{
-        	edit(client, x, y, c);
-            Thread.sleep(25);
+			if(client.get_is_logged())
+			{
+    	    	edit(client, x, y, c);
+	            Thread.sleep(25);
+			}
             ++x;
         }
     }
@@ -99,10 +103,11 @@ public class BotCommands {
 			y += Worker.getSize();
 			if (lines.getAndIncrement() == (Worker.getSize() - 1))
 			{
-				Main.getLogger().info("Printed {}/{} lines ({}%) in {} with {} workers. ETA : {}", 
+				Main.getLogger().info("Printed {}/{} lines ({}% | {} lines left) in {} with {} workers. ETA : {}", 
 					index.get() - Worker.getSize() + 1,
 					strs.size(),
 					((float)index.get()) / ((float)strs.size()) * 100,
+					(strs.size() - index.get()),
 					Main.msToHumanTime((finish - start)),
 					Worker.getSize(),
 					Main.msToHumanTime(((finish - start) * (strs.size() - index.get() - Worker.getSize() + 1)) / Worker.getSize())
@@ -110,6 +115,5 @@ public class BotCommands {
 				lines.set(0);
 			}
 		}
-		Main.getLogger().info("worker with id {} finished their tasks", client.getId());
     }
 }

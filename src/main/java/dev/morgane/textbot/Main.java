@@ -1,6 +1,7 @@
 package dev.morgane.textbot;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,9 +47,9 @@ public class Main {
 
 		if (hours != 0)
 			_final += hours + "H:";
-		if (minutes != 0)
+		if (minutes != 0 || hours != 0)
 			_final += minutes + "M:";
-		if (seconds != 0)
+		if (seconds != 0 || minutes != 0)
 			_final += seconds + "s:";
 		if (ms != 0)
 			_final += ms + "ms";
@@ -66,6 +67,11 @@ public class Main {
         try
         {
 			AtomicInteger i = new AtomicInteger(0);
+			if (getTokens() == null)
+			{
+				System.exit(0);
+				return;
+			}
 			getTokens().forEach(token -> {
 				new Thread(() -> {
 					try {
@@ -79,7 +85,7 @@ public class Main {
 					}
 				}).start();
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(500);
 				} catch (Exception e) {
 					// TODO: handle exception
 				}
@@ -90,10 +96,27 @@ public class Main {
 		IS_LOGGED = true;
     }
 
+	@SneakyThrows
 	private static List<String> getTokens()
 	{
 		List<String> tokens = new ArrayList<>();
 		BufferedReader reader;
+		File token_file = new File("tokens.txt");
+		if (!token_file.exists() || !token_file.isFile())
+		{
+			if (!token_file.exists())
+			{
+				if (!token_file.createNewFile()) 
+				{
+					logger.error("Could not create tokens.txt, something must have gone really wrong !");
+					return (null);
+				}
+				logger.info("Created tokens.txt for you, please populate it with tokens (one per line !)");
+				return (null);
+			}
+			logger.error("there is a folder named tokens.txt, delete this !");
+			return (null);
+		}
 
 		try {
 			reader = new BufferedReader(new FileReader("tokens.txt"));
